@@ -8,8 +8,10 @@ import com.inventory.management.repository.AuditLogRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -25,8 +27,9 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(classes = {com.inventory.management.InventoryManagementApplication.class, com.inventory.management.TestMailConfig.class})
-@AutoConfigureMockMvc
+@WebMvcTest(controllers = ProductController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(com.inventory.management.TestMailConfig.class)
 class ProductControllerTests {
 
     @Autowired
@@ -35,14 +38,9 @@ class ProductControllerTests {
     @Autowired
     ObjectMapper objectMapper;
 
-    @MockBean
-    ProductRepository productRepository;
-
-    @MockBean
-    ProductService productService;
-
-    @MockBean
-    AuditLogRepository auditLogRepository;
+    @MockBean ProductRepository productRepository;
+    @MockBean ProductService productService;
+    @MockBean AuditLogRepository auditLogRepository;
 
     @Test
     @WithMockUser(roles = {"ADMIN"})

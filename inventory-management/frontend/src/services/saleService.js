@@ -16,6 +16,16 @@ const getSales = () => {
     });
 };
 
+const getSalesFiltered = (params) => {
+    const token = getAuthToken();
+    return axios.get(API_URL + 'filter', {
+        params,
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+};
+
 const createSale = (saleData) => {
     const token = getAuthToken();
     return axios.post(API_URL, saleData, {
@@ -27,6 +37,7 @@ const createSale = (saleData) => {
 
 const saleService = {
     getSales,
+    getSalesFiltered,
     createSale,
 };
 
