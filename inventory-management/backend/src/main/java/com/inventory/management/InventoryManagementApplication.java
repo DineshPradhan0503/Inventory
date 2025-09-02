@@ -7,9 +7,13 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SpringBootApplication
 public class InventoryManagementApplication {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(InventoryManagementApplication.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(InventoryManagementApplication.class, args);
@@ -18,11 +22,15 @@ public class InventoryManagementApplication {
 	@Bean
 	CommandLineRunner init(RoleRepository roleRepository) {
 		return args -> {
-			if (roleRepository.findByName(ERole.ROLE_ADMIN).isEmpty()) {
-				roleRepository.save(new Role(ERole.ROLE_ADMIN));
-			}
-			if (roleRepository.findByName(ERole.ROLE_USER).isEmpty()) {
-				roleRepository.save(new Role(ERole.ROLE_USER));
+			try {
+				if (roleRepository.findByName(ERole.ROLE_ADMIN).isEmpty()) {
+					roleRepository.save(new Role(ERole.ROLE_ADMIN));
+				}
+				if (roleRepository.findByName(ERole.ROLE_USER).isEmpty()) {
+					roleRepository.save(new Role(ERole.ROLE_USER));
+				}
+			} catch (Exception ex) {
+				LOGGER.warn("Skipping role seeding as MongoDB is not available: {}", ex.getMessage());
 			}
 		};
 	}
