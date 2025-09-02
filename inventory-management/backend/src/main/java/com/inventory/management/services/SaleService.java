@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class SaleService {
@@ -46,5 +49,15 @@ public class SaleService {
 
     public List<Sale> getAllSales() {
         return saleRepository.findAll();
+    }
+
+    public List<Sale> getSalesFiltered(String productId, String userId, Instant start, Instant end) {
+        List<Sale> all = saleRepository.findAll();
+        return all.stream()
+                .filter(s -> productId == null || productId.isBlank() || productId.equals(s.getProductId()))
+                .filter(s -> userId == null || userId.isBlank() || userId.equals(s.getUserId()))
+                .filter(s -> start == null || !s.getSaleDate().isBefore(start))
+                .filter(s -> end == null || !s.getSaleDate().isAfter(end))
+                .collect(Collectors.toList());
     }
 }

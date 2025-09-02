@@ -12,10 +12,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.inventory.management.security.audit.Audited;
 
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.Instant;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -27,6 +30,7 @@ public class SaleController {
 
     @PostMapping
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @Audited(action = "CREATE_SALE", resource = "SALE")
     public ResponseEntity<SaleResponse> createSale(@Valid @RequestBody SaleRequest saleRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -48,6 +52,26 @@ public class SaleController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<SaleResponse>> getAllSales() {
         List<Sale> sales = saleService.getAllSales();
+        List<SaleResponse> saleResponses = sales.stream()
+                .map(sale -> new SaleResponse(
+                        sale.getId(),
+                        sale.getProductId(),
+                        sale.getQuantitySold(),
+                        sale.getSaleDate(),
+                        sale.getUserId()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(saleResponses);
+    }
+
+    @GetMapping("/filter")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<SaleResponse>> getSalesFiltered(
+            @RequestParam(name = "productId", required = false) String productId,
+            @RequestParam(name = "userId", required = false) String userId,
+            @RequestParam(name = "start", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant start,
+            @RequestParam(name = "end", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant end
+    ) {
+        List<Sale> sales = saleService.getSalesFiltered(productId, userId, start, end);
         List<SaleResponse> saleResponses = sales.stream()
                 .map(sale -> new SaleResponse(
                         sale.getId(),

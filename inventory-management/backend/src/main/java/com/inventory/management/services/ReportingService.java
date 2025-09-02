@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Comparator;
 
 @Service
 public class ReportingService {
@@ -19,7 +21,7 @@ public class ReportingService {
     private ProductRepository productRepository;
 
     @Autowired
-    private SaleRepository saleRepository;
+    public SaleRepository saleRepository;
 
     public List<StockReportItem> generateStockReport() {
         List<Product> products = productRepository.findAll();
@@ -39,5 +41,15 @@ public class ReportingService {
                 .sum();
 
         return new SalesReport(totalSalesAmount, totalSalesCount);
+    }
+
+    public List<Map.Entry<String, Long>> getBestSellingProducts(int topN) {
+        List<Sale> sales = saleRepository.findAll();
+        Map<String, Long> counts = sales.stream()
+                .collect(Collectors.groupingBy(Sale::getProductId, Collectors.summingLong(Sale::getQuantitySold)));
+        return counts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue(Comparator.reverseOrder()))
+                .limit(topN)
+                .collect(Collectors.toList());
     }
 }
