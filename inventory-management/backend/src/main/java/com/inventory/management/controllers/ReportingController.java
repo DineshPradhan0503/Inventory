@@ -63,12 +63,31 @@ public class ReportingController {
     @GetMapping(value = "/sales/export", produces = MediaType.APPLICATION_PDF_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<byte[]> exportSalesPdf() {
-        List<Sale> sales = reportingService.generateSalesReport() != null ?
-                reportingService.saleRepository.findAll() : List.of();
+        List<Sale> sales = reportingService.saleRepository.findAll();
         // Access via service: better expose method, but for brevity use repository through service addition later
         byte[] data = exportService.exportSalesPdf(sales);
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=sales_report.pdf");
         return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(data);
+    }
+
+    @GetMapping(value = "/stock/export/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<byte[]> exportStockPdf() {
+        List<StockReportItem> items = reportingService.generateStockReport();
+        byte[] data = exportService.exportStockPdf(items);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=stock_report.pdf");
+        return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(data);
+    }
+
+    @GetMapping(value = "/sales/export/xlsx", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<byte[]> exportSalesExcel() {
+        List<Sale> sales = reportingService.saleRepository.findAll();
+        byte[] data = exportService.exportSalesExcel(sales);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=sales_report.xlsx");
+        return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_OCTET_STREAM).body(data);
     }
 }
