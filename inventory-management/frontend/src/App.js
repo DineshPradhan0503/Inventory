@@ -17,13 +17,9 @@ function App() {
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/products" element={<PrivateRoute />}>
+          <Route element={<PrivateRoute />}>
             <Route path="/products" element={<ProductPage />} />
-          </Route>
-          <Route path="/sales" element={<PrivateRoute />}>
             <Route path="/sales" element={<SalesPage />} />
-          </Route>
-          <Route path="/reports" element={<PrivateRoute />}>
             <Route path="/reports" element={<ReportingPage />} />
           </Route>
         </Routes>

@@ -1,7 +1,9 @@
 package com.inventory.management.controllers;
 
 import com.inventory.management.models.Product;
-import com.inventory.management.repository.ProductRepository;
+import com.inventory.management.services.ProductService;
+import com.inventory.management.exception.ResourceNotFoundException;
+import com.inventory.management.payload.response.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -18,62 +19,42 @@ import java.util.Optional;
 public class ProductController {
 
     @Autowired
-    private ProductRepository productRepository;
+    private ProductService productService;
 
-    // Create a new product
     @PostMapping("/products")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
-        Product savedProduct = productRepository.save(product);
-        return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
+    public ResponseEntity<ApiResponse<Product>> createProduct(@Valid @RequestBody Product product) {
+        Product savedProduct = productService.createProduct(product);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Product created successfully", savedProduct), HttpStatus.CREATED);
     }
 
-    // Get all products
     @GetMapping("/products")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public ResponseEntity<ApiResponse<List<Product>>> getAllProducts() {
+        List<Product> products = productService.getAllProducts();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Products fetched successfully", products));
     }
 
-    // Get a single product by ID
     @GetMapping("/products/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<Product> getProductById(@PathVariable(value = "id") String productId) {
-        Optional<Product> product = productRepository.findById(productId);
-        return product.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<Product>> getProductById(@PathVariable(value = "id") String productId) {
+        Product product = productService.getProductById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Product fetched successfully", product));
     }
 
-    // Update a product
     @PutMapping("/products/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Product> updateProduct(@PathVariable(value = "id") String productId,
+    public ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable(value = "id") String productId,
                                                  @Valid @RequestBody Product productDetails) {
-        Optional<Product> optionalProduct = productRepository.findById(productId);
-        if (optionalProduct.isPresent()) {
-            Product product = optionalProduct.get();
-            product.setName(productDetails.getName());
-            product.setCategory(productDetails.getCategory());
-            product.setDescription(productDetails.getDescription());
-            product.setPrice(productDetails.getPrice());
-            product.setStockQuantity(productDetails.getStockQuantity());
-            product.setThreshold(productDetails.getThreshold());
-            Product updatedProduct = productRepository.save(product);
-            return ResponseEntity.ok(updatedProduct);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        Product updatedProduct = productService.updateProduct(productId, productDetails);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Product updated successfully", updatedProduct));
     }
 
-    // Delete a product
     @DeleteMapping("/products/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteProduct(@PathVariable(value = "id") String productId) {
-        Optional<Product> optionalProduct = productRepository.findById(productId);
-        if (optionalProduct.isPresent()) {
-            productRepository.deleteById(productId);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable(value = "id") String productId) {
+        productService.deleteProduct(productId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Product deleted successfully"));
     }
 }

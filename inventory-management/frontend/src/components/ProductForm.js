@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { createProduct, updateProduct } from '../redux/productSlice';
-import { Modal, Box, TextField, Button } from '@mui/material';
-
-const style = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: 'background.paper',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
-};
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    Button,
+    Box
+} from '@mui/material';
 
 const ProductForm = ({ open, handleClose, product }) => {
     const [formData, setFormData] = useState({
@@ -40,7 +36,7 @@ const ProductForm = ({ open, handleClose, product }) => {
                 threshold: '',
             });
         }
-    }, [product]);
+    }, [product, open]);
 
     const onChange = (e) => {
         setFormData((prevState) => ({
@@ -51,31 +47,94 @@ const ProductForm = ({ open, handleClose, product }) => {
 
     const onSubmit = (e) => {
         e.preventDefault();
+        const productData = {
+            ...formData,
+            price: parseFloat(formData.price),
+            stockQuantity: parseInt(formData.stockQuantity, 10),
+            threshold: parseInt(formData.threshold, 10),
+        };
+
         if (product) {
-            dispatch(updateProduct({ id: product.id, productData: formData }));
+            dispatch(updateProduct({ id: product.id, productData }));
         } else {
-            dispatch(createProduct(formData));
+            dispatch(createProduct(productData));
         }
         handleClose();
     };
 
     return (
-        <Modal open={open} onClose={handleClose}>
-            <Box sx={style}>
-                <h2>{product ? 'Edit Product' : 'Add Product'}</h2>
-                <form onSubmit={onSubmit}>
-                    <TextField name="name" label="Name" value={formData.name} onChange={onChange} fullWidth required />
-                    <TextField name="category" label="Category" value={formData.category} onChange={onChange} fullWidth required />
-                    <TextField name="description" label="Description" value={formData.description} onChange={onChange} fullWidth />
-                    <TextField name="price" label="Price" type="number" value={formData.price} onChange={onChange} fullWidth required />
-                    <TextField name="stockQuantity" label="Stock Quantity" type="number" value={formData.stockQuantity} onChange={onChange} fullWidth required />
-                    <TextField name="threshold" label="Threshold" type="number" value={formData.threshold} onChange={onChange} fullWidth required />
-                    <Button type="submit" variant="contained" sx={{ mt: 2 }}>
+        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+            <DialogTitle>{product ? 'Edit Product' : 'Add Product'}</DialogTitle>
+            <Box component="form" onSubmit={onSubmit}>
+                <DialogContent>
+                    <TextField
+                        name="name"
+                        label="Name"
+                        value={formData.name}
+                        onChange={onChange}
+                        fullWidth
+                        required
+                        margin="normal"
+                    />
+                    <TextField
+                        name="category"
+                        label="Category"
+                        value={formData.category}
+                        onChange={onChange}
+                        fullWidth
+                        required
+                        margin="normal"
+                    />
+                    <TextField
+                        name="description"
+                        label="Description"
+                        value={formData.description}
+                        onChange={onChange}
+                        fullWidth
+                        multiline
+                        rows={4}
+                        margin="normal"
+                    />
+                    <TextField
+                        name="price"
+                        label="Price"
+                        type="number"
+                        value={formData.price}
+                        onChange={onChange}
+                        fullWidth
+                        required
+                        margin="normal"
+                        inputProps={{ step: "0.01" }}
+                    />
+                    <TextField
+                        name="stockQuantity"
+                        label="Stock Quantity"
+                        type="number"
+                        value={formData.stockQuantity}
+                        onChange={onChange}
+                        fullWidth
+                        required
+                        margin="normal"
+                    />
+                    <TextField
+                        name="threshold"
+                        label="Threshold"
+                        type="number"
+                        value={formData.threshold}
+                        onChange={onChange}
+                        fullWidth
+                        required
+                        margin="normal"
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button type="submit" variant="contained">
                         {product ? 'Update' : 'Create'}
                     </Button>
-                </form>
+                </DialogActions>
             </Box>
-        </Modal>
+        </Dialog>
     );
 };
 

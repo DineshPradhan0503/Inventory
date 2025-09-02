@@ -1,8 +1,10 @@
 package com.inventory.management.services;
 
+import com.inventory.management.exception.InsufficientStockException;
 import com.inventory.management.models.Product;
 import com.inventory.management.models.Sale;
 import com.inventory.management.payload.request.SaleRequest;
+import com.inventory.management.payload.response.SaleResponse;
 import com.inventory.management.repository.ProductRepository;
 import com.inventory.management.repository.SaleRepository;
 import org.junit.jupiter.api.Test;
@@ -33,28 +35,33 @@ public class SaleServiceTest {
     public void testCreateSale_Success() {
         // Arrange
         Product product = new Product("Test Product", "Category", "Description", 10.0, 100, 10);
+        product.setId("1");
         SaleRequest saleRequest = new SaleRequest();
         saleRequest.setProductId("1");
         saleRequest.setQuantitySold(5);
 
+        Sale sale = new Sale("1", 5, "user1");
+        sale.setId("sale1");
+
         when(productRepository.findById("1")).thenReturn(Optional.of(product));
-        when(saleRepository.save(any(Sale.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(saleRepository.save(any(Sale.class))).thenReturn(sale);
 
         // Act
-        Sale createdSale = saleService.createSale(saleRequest, "user1");
+        SaleResponse createdSaleResponse = saleService.createSale(saleRequest, "user1");
 
         // Assert
-        assertNotNull(createdSale);
+        assertNotNull(createdSaleResponse);
         assertEquals(95, product.getStockQuantity());
-        assertEquals("1", createdSale.getProductId());
-        assertEquals(5, createdSale.getQuantitySold());
-        assertEquals("user1", createdSale.getUserId());
+        assertEquals("1", createdSaleResponse.getProductId());
+        assertEquals(5, createdSaleResponse.getQuantitySold());
+        assertEquals("user1", createdSaleResponse.getUserId());
     }
 
     @Test
     public void testCreateSale_InsufficientStock() {
         // Arrange
         Product product = new Product("Test Product", "Category", "Description", 10.0, 5, 10);
+        product.setId("1");
         SaleRequest saleRequest = new SaleRequest();
         saleRequest.setProductId("1");
         saleRequest.setQuantitySold(10);
@@ -62,7 +69,7 @@ public class SaleServiceTest {
         when(productRepository.findById("1")).thenReturn(Optional.of(product));
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(InsufficientStockException.class, () -> {
             saleService.createSale(saleRequest, "user1");
         });
     }

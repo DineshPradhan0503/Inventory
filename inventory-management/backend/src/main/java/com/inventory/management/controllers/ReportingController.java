@@ -1,5 +1,6 @@
 package com.inventory.management.controllers;
 
+import com.inventory.management.payload.response.ApiResponse;
 import com.inventory.management.payload.response.SalesReport;
 import com.inventory.management.payload.response.StockReportItem;
 import com.inventory.management.services.ReportingService;
@@ -23,15 +24,15 @@ public class ReportingController {
 
     @GetMapping("/stock")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<StockReportItem>> getStockReport() {
+    public ResponseEntity<ApiResponse<List<StockReportItem>>> getStockReport() {
         List<StockReportItem> report = reportingService.generateStockReport();
-        return ResponseEntity.ok(report);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Stock report generated successfully", report));
     }
 
     @GetMapping("/sales")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<SalesReport> getSalesReport() {
+    public ResponseEntity<ApiResponse<SalesReport>> getSalesReport() {
         SalesReport report = reportingService.generateSalesReport();
-        return ResponseEntity.ok(report);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Sales report generated successfully", report));
     }
 }

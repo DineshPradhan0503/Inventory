@@ -1,7 +1,7 @@
 package com.inventory.management.controllers;
 
-import com.inventory.management.models.Sale;
 import com.inventory.management.payload.request.SaleRequest;
+import com.inventory.management.payload.response.ApiResponse;
 import com.inventory.management.payload.response.SaleResponse;
 import com.inventory.management.security.services.UserDetailsImpl;
 import com.inventory.management.services.SaleService;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -27,35 +26,20 @@ public class SaleController {
 
     @PostMapping
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<SaleResponse> createSale(@Valid @RequestBody SaleRequest saleRequest) {
+    public ResponseEntity<ApiResponse<SaleResponse>> createSale(@Valid @RequestBody SaleRequest saleRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         String userId = userDetails.getId();
 
-        Sale newSale = saleService.createSale(saleRequest, userId);
+        SaleResponse newSale = saleService.createSale(saleRequest, userId);
 
-        SaleResponse saleResponse = new SaleResponse(
-                newSale.getId(),
-                newSale.getProductId(),
-                newSale.getQuantitySold(),
-                newSale.getSaleDate(),
-                newSale.getUserId()
-        );
-        return new ResponseEntity<>(saleResponse, HttpStatus.CREATED);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Sale created successfully", newSale), HttpStatus.CREATED);
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<SaleResponse>> getAllSales() {
-        List<Sale> sales = saleService.getAllSales();
-        List<SaleResponse> saleResponses = sales.stream()
-                .map(sale -> new SaleResponse(
-                        sale.getId(),
-                        sale.getProductId(),
-                        sale.getQuantitySold(),
-                        sale.getSaleDate(),
-                        sale.getUserId()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(saleResponses);
+    public ResponseEntity<ApiResponse<List<SaleResponse>>> getAllSales() {
+        List<SaleResponse> sales = saleService.getAllSales();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Sales fetched successfully", sales));
     }
 }

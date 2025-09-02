@@ -1,8 +1,11 @@
 package com.inventory.management.services;
 
+import com.inventory.management.exception.InsufficientStockException;
+import com.inventory.management.exception.ResourceNotFoundException;
 import com.inventory.management.models.Product;
 import com.inventory.management.models.Sale;
 import com.inventory.management.payload.request.SaleRequest;
+import com.inventory.management.payload.response.SaleResponse;
 import com.inventory.management.repository.ProductRepository;
 import com.inventory.management.repository.SaleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SaleService {
@@ -21,30 +25,41 @@ public class SaleService {
     private ProductRepository productRepository;
 
     @Transactional
-    public Sale createSale(SaleRequest saleRequest, String userId) {
-        // 1. Find the product
+    public SaleResponse createSale(SaleRequest saleRequest, String userId) {
         Product product = productRepository.findById(saleRequest.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + saleRequest.getProductId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + saleRequest.getProductId()));
 
-        // 2. Check if there is enough stock
         if (product.getStockQuantity() < saleRequest.getQuantitySold()) {
-            throw new RuntimeException("Insufficient stock for product: " + product.getName());
+            throw new InsufficientStockException("Insufficient stock for product: " + product.getName());
         }
 
-        // 3. Decrease the stock quantity
         product.setStockQuantity(product.getStockQuantity() - saleRequest.getQuantitySold());
         productRepository.save(product);
 
-        // 4. Create and save the sale
         Sale sale = new Sale(
                 saleRequest.getProductId(),
                 saleRequest.getQuantitySold(),
                 userId
         );
-        return saleRepository.save(sale);
+        Sale newSale = saleRepository.save(sale);
+
+        return new SaleResponse(
+                newSale.getId(),
+                newSale.getProductId(),
+                newSale.getQuantitySold(),
+                newSale.getSaleDate(),
+                newSale.getUserId()
+        );
     }
 
-    public List<Sale> getAllSales() {
-        return saleRepository.findAll();
+    public List<SaleResponse> getAllSales() {
+        return saleRepository.findAll().stream()
+                .map(sale -> new SaleResponse(
+                        sale.getId(),
+                        sale.getProductId(),
+                        sale.getQuantitySold(),
+                        sale.getSaleDate(),
+                        sale.getUserId()))
+                .collect(Collectors.toList());
     }
 }
