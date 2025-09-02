@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getProducts, deleteProduct } from '../redux/productSlice';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton } from '@mui/material';
+import { getProducts, deleteProduct, searchProducts, getLowStock, increaseStock, decreaseStock } from '../redux/productSlice';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton, TextField, Stack } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ProductForm from '../components/ProductForm';
@@ -13,10 +13,26 @@ const ProductPage = () => {
 
     const [open, setOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [query, setQuery] = useState('');
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+    const [lowStockOnly, setLowStockOnly] = useState(false);
 
     useEffect(() => {
         dispatch(getProducts());
     }, [dispatch]);
+
+    const applySearch = () => {
+        const params = {};
+        if (query) params.q = query;
+        if (minPrice) params.minPrice = parseFloat(minPrice);
+        if (maxPrice) params.maxPrice = parseFloat(maxPrice);
+        dispatch(searchProducts(params));
+    };
+
+    const showLowStock = () => {
+        dispatch(getLowStock());
+    };
 
     const handleOpen = (product = null) => {
         setSelectedProduct(product);
@@ -47,6 +63,14 @@ const ProductPage = () => {
     return (
         <div>
             <h1>Products</h1>
+            <Stack direction="row" spacing={2} sx={{ my: 2 }}>
+                <TextField size="small" label="Search" value={query} onChange={(e) => setQuery(e.target.value)} />
+                <TextField size="small" label="Min Price" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
+                <TextField size="small" label="Max Price" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
+                <Button variant="outlined" onClick={applySearch}>Search</Button>
+                <Button variant="outlined" onClick={showLowStock}>Low Stock</Button>
+                <Button variant="text" onClick={() => dispatch(getProducts())}>Reset</Button>
+            </Stack>
             {isAdmin && <Button variant="contained" onClick={() => handleOpen()}>Add Product</Button>}
             <ProductForm open={open} handleClose={handleClose} product={selectedProduct} />
             <TableContainer component={Paper}>
@@ -77,6 +101,8 @@ const ProductPage = () => {
                                         <IconButton onClick={() => handleDelete(product.id)}>
                                             <DeleteIcon />
                                         </IconButton>
+                                        <Button size="small" onClick={() => dispatch(increaseStock({ id: product.id, amount: 1 }))}>+1</Button>
+                                        <Button size="small" onClick={() => dispatch(decreaseStock({ id: product.id, amount: 1 }))}>-1</Button>
                                     </TableCell>
                                 )}
                             </TableRow>

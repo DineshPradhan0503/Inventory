@@ -20,6 +20,19 @@ export const getSales = createAsyncThunk('sales/getAll', async (_, thunkAPI) => 
     }
 });
 
+export const getSalesFiltered = createAsyncThunk('sales/getFiltered', async (params, thunkAPI) => {
+    try {
+        const response = await saleService.getSalesFiltered(params);
+        return response.data;
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
 export const createSale = createAsyncThunk('sales/create', async (saleData, thunkAPI) => {
     try {
         const response = await saleService.createSale(saleData);
@@ -49,6 +62,17 @@ const saleSlice = createSlice({
                 state.sales = action.payload;
             })
             .addCase(getSales.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+            .addCase(getSalesFiltered.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(getSalesFiltered.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.sales = action.payload;
+            })
+            .addCase(getSalesFiltered.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
             })

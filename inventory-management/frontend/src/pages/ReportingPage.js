@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getStockReport, getSalesReport } from '../redux/reportingSlice';
+import reportingService from '../services/reportingService';
+import { Button, Stack } from '@mui/material';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -25,6 +27,10 @@ const ReportingPage = () => {
         <div>
             <h1>Reporting</h1>
             <h2>Stock Report</h2>
+            <Stack direction="row" spacing={2} sx={{ my: 1 }}>
+                <Button size="small" variant="outlined" onClick={() => reportingService.exportStockExcel()}>Export Excel</Button>
+                <Button size="small" variant="outlined" onClick={() => reportingService.exportStockPdf()}>Export PDF</Button>
+            </Stack>
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
@@ -51,6 +57,10 @@ const ReportingPage = () => {
             </TableContainer>
 
             <h2>Sales Report</h2>
+            <Stack direction="row" spacing={2} sx={{ my: 1 }}>
+                <Button size="small" variant="outlined" onClick={() => reportingService.exportSalesPdf()}>Export PDF</Button>
+                <Button size="small" variant="outlined" onClick={() => reportingService.exportSalesExcel()}>Export Excel</Button>
+            </Stack>
             {salesReport && (
                 <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={[salesReport]}>

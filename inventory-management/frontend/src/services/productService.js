@@ -16,6 +16,16 @@ const getProducts = () => {
     });
 };
 
+const searchProducts = (params) => {
+    const token = getAuthToken();
+    return axios.get('/api/products/search', {
+        params,
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+};
+
 const createProduct = (productData) => {
     const token = getAuthToken();
     return axios.post(API_URL, productData, {
@@ -43,11 +53,44 @@ const deleteProduct = (id) => {
     });
 };
 
+const getLowStock = () => {
+    const token = getAuthToken();
+    return axios.get(API_URL + 'low-stock', {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+};
+
+const increaseStock = (id, amount) => {
+    const token = getAuthToken();
+    return axios.post(`${API_URL}${id}/stock/increase`, null, {
+        params: { amount },
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+};
+
+const decreaseStock = (id, amount) => {
+    const token = getAuthToken();
+    return axios.post(`${API_URL}${id}/stock/decrease`, null, {
+        params: { amount },
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+};
+
 const productService = {
     getProducts,
+    searchProducts,
     createProduct,
     updateProduct,
     deleteProduct,
+    getLowStock,
+    increaseStock,
+    decreaseStock,
 };
 
 export default productService;

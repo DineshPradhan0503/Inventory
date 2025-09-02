@@ -20,6 +20,19 @@ export const getProducts = createAsyncThunk('products/getAll', async (_, thunkAP
     }
 });
 
+export const searchProducts = createAsyncThunk('products/search', async (params, thunkAPI) => {
+    try {
+        const response = await productService.searchProducts(params);
+        return response.data.content ?? response.data; // support Page or array
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
 export const createProduct = createAsyncThunk('products/create', async (productData, thunkAPI) => {
     try {
         const response = await productService.createProduct(productData);
@@ -59,6 +72,45 @@ export const deleteProduct = createAsyncThunk('products/delete', async (id, thun
     }
 });
 
+export const getLowStock = createAsyncThunk('products/lowStock', async (_, thunkAPI) => {
+    try {
+        const response = await productService.getLowStock();
+        return response.data;
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+export const increaseStock = createAsyncThunk('products/increaseStock', async ({ id, amount }, thunkAPI) => {
+    try {
+        const response = await productService.increaseStock(id, amount);
+        return response.data;
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+export const decreaseStock = createAsyncThunk('products/decreaseStock', async ({ id, amount }, thunkAPI) => {
+    try {
+        const response = await productService.decreaseStock(id, amount);
+        return response.data;
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
 const productSlice = createSlice({
     name: 'products',
     initialState,
@@ -75,6 +127,28 @@ const productSlice = createSlice({
                 state.products = action.payload;
             })
             .addCase(getProducts.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+            .addCase(searchProducts.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(searchProducts.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.products = action.payload;
+            })
+            .addCase(searchProducts.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+            .addCase(getLowStock.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(getLowStock.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.products = action.payload;
+            })
+            .addCase(getLowStock.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
             })
@@ -113,6 +187,18 @@ const productSlice = createSlice({
             .addCase(deleteProduct.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
+            })
+            .addCase(increaseStock.fulfilled, (state, action) => {
+                const index = state.products.findIndex((p) => p.id === action.payload.id);
+                if (index !== -1) {
+                    state.products[index] = action.payload;
+                }
+            })
+            .addCase(decreaseStock.fulfilled, (state, action) => {
+                const index = state.products.findIndex((p) => p.id === action.payload.id);
+                if (index !== -1) {
+                    state.products[index] = action.payload;
+                }
             });
     },
 });

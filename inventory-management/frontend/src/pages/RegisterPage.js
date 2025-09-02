@@ -8,9 +8,10 @@ const RegisterPage = () => {
         username: '',
         email: '',
         password: '',
+        role: 'user',
     });
 
-    const { username, email, password } = formData;
+    const { username, email, password, role } = formData;
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -43,6 +44,7 @@ const RegisterPage = () => {
             username,
             email,
             password,
+            role: [role],
         };
         dispatch(registerUser(userData));
     };
@@ -79,6 +81,10 @@ const RegisterPage = () => {
                     placeholder="Password"
                     required
                 />
+                <select name="role" value={role} onChange={onChange}>
+                    <option value="user">USER</option>
+                    <option value="admin">ADMIN</option>
+                </select>
                 <button type="submit">Register</button>
             </form>
         </div>
